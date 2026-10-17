@@ -1,0 +1,521 @@
+{
+  "skill_name": "vibe-check",
+  "notes": "Fixtures are built with build_fixture.py into a throwaway folder; <project-path> in each prompt is that folder. 'checks' drive grade.py: kind 'verify' runs verify_report.py on the report, 'no_secrets' looks for the generated fake keys in all outputs, 'reply_short' caps final_reply.md word count, 'find' passes when any single paragraph or table row of the report + reply matches every regex in one of the 'any_of' groups (case-insensitive).",
+  "evals": [
+    {
+      "id": 1,
+      "name": "splitly-full-audit",
+      "fixture": "splitly",
+      "prompt": "I built this bill-splitting app (Splitly) mostly with Cursor and I want to launch it next week. Can you vibe check the whole thing before I ship? It's at <project-path>",
+      "expected_output": "VIBE_CHECK.md covering all 84 items with evidence; the planted Next.js/Supabase/Stripe/OpenAI problems found and ranked; a short chat reply.",
+      "files": [],
+      "checks": [
+        {
+          "text": "Report covers all 84 checklist items, each with a valid verdict and evidence (verify_report.py passes)",
+          "kind": "verify"
+        },
+        {
+          "text": "No generated secret value appears in full anywhere in the outputs",
+          "kind": "no_secrets"
+        },
+        {
+          "text": "Final chat reply is short (under 350 words); the detail lives in the report",
+          "kind": "reply_short",
+          "max_words": 350
+        },
+        {
+          "text": "Flags the Supabase service_role key shipped to the browser (NEXT_PUBLIC_ prefix, used in client components)",
+          "kind": "find",
+          "any_of": [
+            [
+              "service[_ -]?role",
+              "NEXT_PUBLIC|browser|client|bundle|frontend"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the .env with live keys that is still in git history, and says to rotate them",
+          "kind": "find",
+          "any_of": [
+            [
+              "\\.env",
+              "history|commit",
+              "rotat|revoke|roll"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the Stripe webhook that skips signature verification",
+          "kind": "find",
+          "any_of": [
+            [
+              "webhook",
+              "signature|constructEvent|verif"
+            ]
+          ]
+        },
+        {
+          "text": "Flags missing row-level security on the Supabase tables (or the public profiles policy)",
+          "kind": "find",
+          "any_of": [
+            [
+              "RLS|row[- ]level",
+              "expenses|groups|comments|invites|tables|not enabled|missing|without|using \\(true\\)|everyone"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the admin page that is protected only on the client",
+          "kind": "find",
+          "any_of": [
+            [
+              "admin",
+              "client[- ]side|client only|front[- ]?end|browser|UI only|ADMIN_EMAILS"
+            ]
+          ]
+        },
+        {
+          "text": "Flags /api/groups/[id] returning any group (with members' emails/phones) without auth or membership check",
+          "kind": "find",
+          "any_of": [
+            [
+              "group",
+              "IDOR|any group|other users|no auth|without auth|unauthenticated|membership|anyone"
+            ]
+          ]
+        },
+        {
+          "text": "Flags payment trust problems: client-sent price in checkout or Pro unlocked via localStorage",
+          "kind": "find",
+          "any_of": [
+            [
+              "priceAmount|unit_amount|price",
+              "client|trust|tamper|any amount|user[- ]controlled"
+            ],
+            [
+              "localStorage",
+              "isPro|Pro"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the SSRF in /api/parse-receipt (server fetches a user-supplied URL)",
+          "kind": "find",
+          "any_of": [
+            [
+              "SSRF|server[- ]side request forgery"
+            ]
+          ]
+        },
+        {
+          "text": "Flags prompt injection or the AI tool fetching expenses for a model-chosen user_id",
+          "kind": "find",
+          "any_of": [
+            [
+              "prompt[- ]injection"
+            ],
+            [
+              "get_expenses|tool",
+              "user_id|other users|any user"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the XSS via dangerouslySetInnerHTML in comments",
+          "kind": "find",
+          "any_of": [
+            [
+              "dangerouslySetInnerHTML"
+            ],
+            [
+              "XSS|cross[- ]site scripting",
+              "comment"
+            ]
+          ]
+        },
+        {
+          "text": "Flags robots.txt 'Disallow: /' blocking search engines",
+          "kind": "find",
+          "any_of": [
+            [
+              "robots",
+              "Disallow|block|noindex|index"
+            ]
+          ]
+        },
+        {
+          "text": "Flags that there is no privacy policy",
+          "kind": "find",
+          "any_of": [
+            [
+              "privacy",
+              "missing|no privacy|none|absent|doesn't exist|does not exist|not found|no page|no policy"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the public 'receipts' storage bucket",
+          "kind": "find",
+          "any_of": [
+            [
+              "receipts",
+              "public"
+            ]
+          ]
+        },
+        {
+          "text": "Gives a verdict on backups and restore (#44), which generic security reviews skip",
+          "kind": "find",
+          "any_of": [
+            [
+              "backup",
+              "restore"
+            ]
+          ]
+        },
+        {
+          "text": "Gives a verdict on monitoring and alerting (#43)",
+          "kind": "find",
+          "any_of": [
+            [
+              "monitor",
+              "alert|uptime|error track|Sentry"
+            ]
+          ]
+        },
+        {
+          "text": "Gives an opinion on trademarking the brand (#83)",
+          "kind": "find",
+          "any_of": [
+            [
+              "trademark"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "quickcart-84-checklist",
+      "fixture": "quickcart",
+      "prompt": "run my 84 item production checklist on this repo: <project-path> . it's a FastAPI + React shop I vibe coded, planning to put it on a DigitalOcean droplet next month. be thorough, I want to know everything that's wrong",
+      "expected_output": "VIBE_CHECK.md covering all 84 items; the planted FastAPI/React/nginx/compose problems found and ranked; a short chat reply.",
+      "files": [],
+      "checks": [
+        {
+          "text": "Report covers all 84 checklist items, each with a valid verdict and evidence (verify_report.py passes)",
+          "kind": "verify"
+        },
+        {
+          "text": "No generated secret value appears in full anywhere in the outputs",
+          "kind": "no_secrets"
+        },
+        {
+          "text": "Final chat reply is short (under 350 words); the detail lives in the report",
+          "kind": "reply_short",
+          "max_words": 350
+        },
+        {
+          "text": "Flags SQL injection from f-string SQL in products search/sort or GET /orders/{id}",
+          "kind": "find",
+          "any_of": [
+            [
+              "SQL injection|SQLi",
+              "product|order|f-string|ORDER BY|sort|order_id"
+            ]
+          ]
+        },
+        {
+          "text": "Flags GET /api/orders/{id} returning any user's order (IDOR)",
+          "kind": "find",
+          "any_of": [
+            [
+              "order",
+              "IDOR|any order|other users|ownership|any user|someone else"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the JWT secret that falls back to 'secret'",
+          "kind": "find",
+          "any_of": [
+            [
+              "JWT",
+              "secret",
+              "default|fallback|weak|'secret'|\"secret\""
+            ]
+          ]
+        },
+        {
+          "text": "Flags the production database credentials hardcoded as a fallback in config.py",
+          "kind": "find",
+          "any_of": [
+            [
+              "DATABASE_URL|connection string|database credential|db credential|qc_admin",
+              "config\\.py|hardcoded|fallback|default"
+            ]
+          ]
+        },
+        {
+          "text": "Flags MD5 password hashing",
+          "kind": "find",
+          "any_of": [
+            [
+              "md5",
+              "password|hash"
+            ]
+          ]
+        },
+        {
+          "text": "Flags path traversal in the file upload/download routes",
+          "kind": "find",
+          "any_of": [
+            [
+              "path traversal|directory traversal|\\.\\./"
+            ]
+          ]
+        },
+        {
+          "text": "Flags SSRF in /api/preview",
+          "kind": "find",
+          "any_of": [
+            [
+              "SSRF|server[- ]side request forgery"
+            ]
+          ]
+        },
+        {
+          "text": "Flags admin routes guarded only by a client-set X-Admin header",
+          "kind": "find",
+          "any_of": [
+            [
+              "X-Admin"
+            ]
+          ]
+        },
+        {
+          "text": "Flags mass assignment letting users set their own role via PUT /users/me",
+          "kind": "find",
+          "any_of": [
+            [
+              "mass[- ]assignment"
+            ],
+            [
+              "role",
+              "users/me|update_me|PUT|escalat|promote|admin"
+            ]
+          ]
+        },
+        {
+          "text": "Flags stack traces / debug mode returned to clients",
+          "kind": "find",
+          "any_of": [
+            [
+              "traceback|stack trace|debug=True|debug mode",
+              "client|response|exception|500|leak|return"
+            ]
+          ]
+        },
+        {
+          "text": "Flags wildcard CORS with credentials",
+          "kind": "find",
+          "any_of": [
+            [
+              "CORS",
+              "\\*|wildcard|any origin|all origins"
+            ]
+          ]
+        },
+        {
+          "text": "Flags plaintext passwords written to logs",
+          "kind": "find",
+          "any_of": [
+            [
+              "log",
+              "password"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the SendGrid key exposed to the browser via a VITE_ variable / committed .env.production",
+          "kind": "find",
+          "any_of": [
+            [
+              "SendGrid",
+              "VITE|frontend|bundle|browser|client|\\.env\\.production"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the order total trusted from the client",
+          "kind": "find",
+          "any_of": [
+            [
+              "total",
+              "client|trust|tamper|user[- ]controlled|any amount"
+            ]
+          ]
+        },
+        {
+          "text": "Flags nginx serving the whole /app folder with autoindex on",
+          "kind": "find",
+          "any_of": [
+            [
+              "autoindex"
+            ],
+            [
+              "nginx",
+              "root /app|project root|whole app|source|directory listing"
+            ]
+          ]
+        },
+        {
+          "text": "Flags Adminer / Postgres exposed on public ports with default credentials",
+          "kind": "find",
+          "any_of": [
+            [
+              "Adminer|5432|8080",
+              "expos|public|internet|published|default"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the weak password reset (guessable token, no expiry, or Host-header link)",
+          "kind": "find",
+          "any_of": [
+            [
+              "reset",
+              "token|link",
+              "predictable|guessable|md5|Host header|8[- ]char|expir|enumerat|brute"
+            ]
+          ]
+        },
+        {
+          "text": "Gives a verdict on backups and restore (#44), which generic security reviews skip",
+          "kind": "find",
+          "any_of": [
+            [
+              "backup",
+              "restore"
+            ]
+          ]
+        },
+        {
+          "text": "Gives a verdict on monitoring and alerting (#43)",
+          "kind": "find",
+          "any_of": [
+            [
+              "monitor",
+              "alert|uptime|error track|Sentry"
+            ]
+          ]
+        },
+        {
+          "text": "Gives an opinion on trademarking the brand (#83)",
+          "kind": "find",
+          "any_of": [
+            [
+              "trademark"
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "quickcart-security-subset",
+      "fixture": "quickcart",
+      "prompt": "Quick one, I'm short on time: check only the security basics on <project-path> , items 1-30 of the checklist. I'll do the rest later.",
+      "expected_output": "A report limited to items 1-30 (original numbering), each with a verdict and evidence; the in-scope planted problems found.",
+      "files": [],
+      "checks": [
+        {
+          "text": "Report table has exactly items 1-30 with valid verdicts and evidence (verify_report.py --only 1-30 passes)",
+          "kind": "verify",
+          "only": "1-30"
+        },
+        {
+          "text": "No generated secret value appears in full anywhere in the outputs",
+          "kind": "no_secrets"
+        },
+        {
+          "text": "Flags SQL injection (#17)",
+          "kind": "find",
+          "any_of": [
+            [
+              "SQL injection|SQLi"
+            ]
+          ]
+        },
+        {
+          "text": "Flags path traversal (#22)",
+          "kind": "find",
+          "any_of": [
+            [
+              "path traversal|directory traversal|\\.\\./"
+            ]
+          ]
+        },
+        {
+          "text": "Flags SSRF (#23)",
+          "kind": "find",
+          "any_of": [
+            [
+              "SSRF|server[- ]side request forgery"
+            ]
+          ]
+        },
+        {
+          "text": "Flags the JWT secret fallback 'secret' (#26)",
+          "kind": "find",
+          "any_of": [
+            [
+              "JWT",
+              "secret",
+              "default|fallback|weak|'secret'|\"secret\""
+            ]
+          ]
+        },
+        {
+          "text": "Flags the seeded admin@quickcart.io / admin default credentials (#30)",
+          "kind": "find",
+          "any_of": [
+            [
+              "admin",
+              "seed|admin/admin|admin@quickcart|default credential|default password"
+            ]
+          ]
+        },
+        {
+          "text": "Flags admin routes guarded by the X-Admin header (#9)",
+          "kind": "find",
+          "any_of": [
+            [
+              "X-Admin"
+            ]
+          ]
+        },
+        {
+          "text": "Flags wildcard CORS with credentials (#27)",
+          "kind": "find",
+          "any_of": [
+            [
+              "CORS",
+              "\\*|wildcard|any origin|all origins"
+            ]
+          ]
+        },
+        {
+          "text": "Flags missing rate limits on login and other endpoints (#28)",
+          "kind": "find",
+          "any_of": [
+            [
+              "rate[- ]limit",
+              "login|no |missing|none|absent"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}
