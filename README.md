@@ -1,8 +1,5 @@
-<h1 align="center">vibe-check</h1>
-
 <p align="center">
-  An 84-point production-readiness audit for apps built with AI.<br />
-  Every item gets a verdict, and every verdict comes with evidence.
+  <img src="assets/banner.svg" alt="vibe-check: ship with evidence, not vibes. An 84-point production-readiness audit for apps built with AI." width="100%" />
 </p>
 
 <p align="center">
@@ -191,6 +188,7 @@ skills/vibe-check/
 └── scripts/
     ├── recon.py              stack fingerprint + redacted secret scan of files and git history
     └── verify_report.py      checks the report covers every item with evidence; prints the tally
+assets/banner.svg             the README banner
 evals/
 ├── fixtures/                 two broken demo apps used for testing
 ├── build_fixture.py          turns a fixture into a git repo with generated fake keys
